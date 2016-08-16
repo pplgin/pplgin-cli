@@ -1,0 +1,29 @@
+{
+  "name": "pplgin-cli",
+  "version": "1.0.0",
+  "description": "angular-es6脚手架",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "pplgin": "bin/pplgin"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pplgin/pplgin-cli.git"
+  },
+  "keywords": [
+    "node",
+    "angular",
+    "es6"
+  ],
+  "author": "johnnyjiang",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "co": "^4.6.0",
+    "co-prompt": "^1.0.0",
+    "commander": "^2.9.0"
+  }
+}
