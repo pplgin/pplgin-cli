@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+'use strict'
+const download = require('download-git-repo')
+const program = require('commander')
+const exists = require('fs').existsSync
+const path = require('path')
+var ora = require('ora')
+const rm = require('rimraf').sync
+const chalk = require('chalk')
+const inquirer = require('inquirer')
+const request = require('request')
+
+
+program
+  .usage('[project-name]')
+  .option('-c, --clone', 'use git clone')
+
+
+program.on('--help', function () {
+  console.log('  Examples:')
+  console.log()
+  console.log(chalk.gray('# create a new project'))
+  console.log('    $ pplgin init my-project')
+  console.log()
+})
+
+function help () {
+  program.parse(process.argv)
+  if (program.args.length < 1) return program.help()
+}
+help()
+
+
+process.on('exit', () => {
+  console.log()
+})
+
+
+var rawName = program.args[0]
+var inPlace = !rawName || rawName === '.'
+var name = inPlace ? path.relative('../', process.cwd()) : rawName
+var to = path.resolve(rawName || '.')
+
+
+/**
+ * 如果存在文件夹
+ * @createTime           2016-08-16T23:46:35+0800
+ */
+if (exists(to)) {
+  inquirer.prompt([{
+    type: 'confirm',
+    message: inPlace
+      ? 'Generate project in current directory?'
+      : 'Target directory exists. Continue?',
+    name: 'ok'
+  }]).then((answers)=>{
+    if (answers.ok) {
+      downloadTmpl(to);
+    }
+  })
+} else {
+  downloadTmpl(to);
+}
+
+
+
+function downloadTmpl(_dir){
+  var spinner = ora('Template init ...')
+  spinner.start();
+  let _tmpl = 'github:pplgin/mdt';
+  download(_tmpl,_dir, { clone: true }, function (err) {
+    if (err){
+      process.on('exit', function () {
+        rm(_dir)
+      })
+      spinner.fail();
+      console.error('Failed to download repo ' + _tmpl +chalk.red(JSON.stringify(err)))
+      return;
+    }
+    spinner.succeed();
+    console.log(chalk.green('\n √ Generation completed!'))
+  })
+}
+
+
