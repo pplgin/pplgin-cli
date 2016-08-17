@@ -10,16 +10,14 @@ module.exports = () => {
 		let tplName = yield prompt('Template name: ')
 		let gitUrl = yield prompt('Git https link: ')
 		let branch = yield prompt('Branch: ')
-
 		if (!config.tmpl[tplName]) {
 			config.tmpl[tplName] = {}
-			config.tmpl[tplName]['url'] = gitUrl.replace(/[\u0000-\u0019]/g, '');
-			config.tmpl[tplName]['branch'] = branch
+			config.tmpl[tplName].url = gitUrl.replace(/[\u0000-\u0019]/g, '');
+			config.tmpl[tplName].branch = branch
 		} else {
 			console.log(chalk.red('Template has already existed!'))
 			process.exit()
 		}
-
 		fs.writeFile(__dirname + '/../templates.json', JSON.stringify(config), 'utf-8', (err) => {
 			if (err) console.log(err)
 			console.log(chalk.green('New template added!\n'))

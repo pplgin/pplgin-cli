@@ -1,161 +1,36 @@
-#!/usr/bin/env node
+'use strict'
+const exec = require('child_process').exec
+const co = require('co')
+const prompt = require('co-prompt')
+const config = require('../templates')
+const chalk = require('chalk')
 
-const download = require('download-git-repo')
-var program = require('commander')
-var exists = require('fs').existsSync
-var path = require('path');
-var rm = require('rimraf').sync;
-var uid = require('uid')
-var ora = require('ora')
-var chalk = require('chalk')
-var inquirer = require('inquirer')
-var request = require('request')
+module.exports = () => {
+ 	co(function *() {
+  	let tplName = yield prompt('Template name: ')
+  	let projectName = yield prompt('Project name: ')
+  	let gitUrl
+  	let branch
 
-/**
- * Usage.
- */
+		if (!config.tpl[tplName]) {
+    	console.log(chalk.red('\n × Template does not exit!'))
+    	process.exit()
+    }
+		gitUrl = config.tpl[tplName].url
+		branch = config.tpl[tplName].branch
 
-program
-	.usage('<template-name> [project-name]')
-	.option('-c, --clone', 'use git clone')
+    let cmdStr = `git clone ${gitUrl} ${projectName} && cd ${projectName} && git checkout ${branch}`
 
-/**
- * Help.
- */
+	  console.log(chalk.white('\n Start generating...'))
 
-program.on('--help', function () {
-	console.log('  Examples:')
-	console.log()
-	console.log(chalk.gray('    # create a new project with an official template'))
-	console.log('    $ vue init webpack my-project')
-	console.log()
-	console.log(chalk.gray('    # create a new project straight from a github template'))
-	console.log('    $ vue init username/repo my-project')
-	console.log()
-})
-
-/**
- * Help.
- */
-
-function help () {
-	program.parse(process.argv)
-	if (program.args.length < 1) return program.help()
-}
-help()
-
-/**
- * Padding.
- */
-
-console.log()
-process.on('exit', function () {
-	console.log()
-})
-
-/**
- * Settings.
- */
-
-var template = program.args[0]
-var hasSlash = template.indexOf('/') > -1
-var rawName = program.args[1]
-var inPlace = !rawName || rawName === '.'
-var name = inPlace ? path.relative('../', process.cwd()) : rawName
-var to = path.resolve(rawName || '.')
-var clone = program.clone || false
-
-if (exists(to)) {
-	inquirer.prompt([{
-		type: 'confirm',
-		message: inPlace
-			? 'Generate project in current directory?'
-			: 'Target directory exists. Continue?',
-		name: 'ok'
-	}], function (answers) {
-		if (answers.ok) {
-			run()
-		}
-	})
-} else {
-	run()
-}
-
-/**
- * Check, download and generate the project.
- */
-
-function run () {
-	// check if template is local
-	if (exists(template)) {
-		generate(name, template, to, function (err) {
-			if (err) logger.fatal(err)
-			console.log()
-			logger.success('Generated "%s".', name)
-		})
-	} else {
-		checkVersion(function () {
-			if (!hasSlash) {
-				// use official templates
-				template = 'vuejs-templates/' + template
-				if (template.indexOf('#') !== -1) {
-					downloadAndGenerate(template)
-				} else {
-					checkDistBranch(template, downloadAndGenerate)
-				}
-			} else {
-				downloadAndGenerate(template)
-			}
-		})
-	}
-}
-
-/**
- * Check if the template has a dist branch, if yes, use that.
- *
- * @param {String} template
- * @param {Function} cb
- */
-
-function checkDistBranch (template, cb) {
-	request({
-		url: 'https://api.github.com/repos/' + template + '/branches',
-		headers: {
-			'User-Agent': 'vue-cli'
-		}
-	}, function (err, res, body) {
-		if (err) logger.fatal(err)
-		if (res.statusCode !== 200) {
-			logger.fatal('Template does not exist: ' + template)
-		} else {
-			var hasDist = JSON.parse(body).some(function (branch) {
-				return branch.name === 'dist'
-			})
-			return cb(hasDist ? template + '#dist' : template)
-		}
-	})
-}
-
-/**
- * Download a generate from a template repo.
- *
- * @param {String} template
- */
-
-function downloadAndGenerate (template) {
-	var tmp = '/tmp/vue-template-' + uid()
-	var spinner = ora('downloading template')
-	spinner.start()
-	download(template, tmp, { clone: clone }, function (err) {
-		spinner.stop()
-		process.on('exit', function () {
-			rm(tmp)
-		})
-		if (err) logger.fatal('Failed to download repo ' + template + ': ' + err.message.trim())
-		generate(name, tmp, to, function (err) {
-			if (err) logger.fatal(err)
-			console.log()
-			logger.success('Generated "%s".', name)
-		})
-	})
+	  exec(cmdStr, (error, stdout, stderr) => {
+      if (error) {
+        console.log(error)
+        process.exit()
+      }
+      console.log(chalk.green('\n √ Generation completed!'))
+      console.log(`\n cd ${projectName} && npm install \n`)
+      process.exit()
+	  })
+  })
 }
