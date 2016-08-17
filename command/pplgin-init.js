@@ -12,12 +12,12 @@ module.exports = () => {
   	let gitUrl
   	let branch
 
-		if (!config.tpl[tplName]) {
+		if (!config.tmpl[tplName]) {
     	console.log(chalk.red('\n × Template does not exit!'))
     	process.exit()
     }
-		gitUrl = config.tpl[tplName].url
-		branch = config.tpl[tplName].branch
+		gitUrl = config.tmpl[tplName].url
+		branch = config.tmpl[tplName].branch
 
     let cmdStr = `git clone ${gitUrl} ${projectName} && cd ${projectName} && git checkout ${branch}`
 
