@@ -67,7 +67,7 @@ if (exists(to)) {
 function downloadTmpl(_dir){
   var spinner = ora('Template init ...')
   spinner.start();
-  let _tmpl = 'github:pplgin/mdt';
+  let _tmpl = 'github:pplgin/pplgin-angular-tmpl';
   download(_tmpl,_dir, { clone: true }, function (err) {
     if (err){
       process.on('exit', function () {
