@@ -9,7 +9,7 @@ const rm = require('rimraf').sync
 const chalk = require('chalk')
 const inquirer = require('inquirer')
 const request = require('request')
-
+const tmpls = require('../tmpls.json');
 
 program
   .usage('[project-name]')
@@ -20,7 +20,7 @@ program.on('--help', function () {
   console.log('  Examples:')
   console.log()
   console.log(chalk.gray('# create a new project'))
-  console.log('    $ pplgin init my-project')
+  console.log('  $ pplgin init my-project (angular|koa)')
   console.log()
 })
 
@@ -36,7 +36,8 @@ process.on('exit', () => {
 })
 
 
-var rawName = program.args[0]
+var rawName = program.args[0]  //文件位置
+var type = program.args[1]     //初始化 哪种类型的项目
 var inPlace = !rawName || rawName === '.'
 var name = inPlace ? path.relative('../', process.cwd()) : rawName
 var to = path.resolve(rawName || '.')
@@ -64,10 +65,14 @@ if (exists(to)) {
 
 
 
-function downloadTmpl(_dir){
+function downloadTmpl(_dir,type){
   var spinner = ora('Template init ...')
   spinner.start();
-  let _tmpl = 'github:pplgin/pplgin-angular-tmpl';
+
+
+  let _tmpl = type?tmpls[type]:tmpls['angular'];
+
+
   download(_tmpl,_dir, { clone: true }, function (err) {
     if (err){
       process.on('exit', function () {
