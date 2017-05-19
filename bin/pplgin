@@ -21,9 +21,10 @@ program
   .command('ls')
   .description('list templates')
   .action(() => {
-    console.log(chalk.gray('Template all List:'));
+    console.log(chalk.gray('Generate  all :'));
+    console.log();
     for (let key in tmpls) {
-      console.log(chalk.green(`template-name: ${key}`))
+      console.log(chalk.green(`gname: ${key}`))
     }
     process.exit()
   })
