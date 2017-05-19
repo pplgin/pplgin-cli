@@ -6,11 +6,10 @@ const gitclone = require('git-clone')
 const program = require('commander')
 const exists = require('fs').existsSync
 const path = require('path')
-var ora = require('ora')
+const ora = require('ora')
 const rm = require('rimraf').sync
 const chalk = require('chalk')
 const inquirer = require('inquirer')
-const request = require('request')
 const tmpls = require('../tmpls.json');
 
 
