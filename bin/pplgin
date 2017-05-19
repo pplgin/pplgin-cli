@@ -1,7 +1,117 @@
 #!/usr/bin/env node
 
-require('commander')
-  .version(require('../package').version)
-  .usage('<command> [options]')
-  .command('init', 'generate a new project from a template')
-  .parse(process.argv)
+'use strict'
+
+const gitclone = require('git-clone')
+const program = require('commander')
+const exists = require('fs').existsSync
+const path = require('path')
+var ora = require('ora')
+const rm = require('rimraf').sync
+const chalk = require('chalk')
+const inquirer = require('inquirer')
+const request = require('request')
+const tmpls = require('../tmpls.json');
+
+
+program
+  .usage('<command>')
+
+// list all templates
+program
+  .command('ls')
+  .description('list templates')
+  .action(() => {
+    console.log(chalk.gray('Template all List:'));
+    for (let key in tmpls) {
+      console.log(chalk.green(`template-name: ${key}`))
+    }
+    process.exit()
+  })
+
+// init some template
+program
+  .command('i')
+  .description('pplgin init template')
+  .action(() => {
+    init();
+  })
+
+// help
+program.on('--help', function() {
+  console.log('Examples:')
+  console.log()
+  console.log(chalk.gray('# create a new project'))
+  console.log('$ pplgin init my-project[name]')
+  console.log()
+})
+
+process.on('exit', () => {
+  console.log()
+})
+
+
+program.parse(process.argv)
+
+if (!program.args.length) {
+  program.help()
+}
+
+
+
+function init() {
+
+  let rawName = program.args[0] //文件位置
+  let _type = program.args[1] //初始化 哪种类型的项目
+  let inPlace = !rawName || rawName === '.'
+  let name = inPlace ? path.relative('../', process.cwd()) : rawName
+  let toDir = path.resolve(rawName || '.')
+
+
+  /**
+   * 如果存在文件夹
+   * @createTime           2016-08-16T23:46:35+0800
+   */
+  if (exists(toDir)) {
+    inquirer.prompt([{
+      type: 'confirm',
+      message: inPlace ? 'Generate project in current directory?' : 'Target directory exists. Continue?',
+      name: 'ok'
+    }]).then((answers) => {
+      if (answers.ok) {
+        downloadTmpl(toDir, _type);
+      }
+    })
+  } else {
+    downloadTmpl(toDir, _type);
+  }
+
+
+
+  function downloadTmpl(_dir, type) {
+    var spinner = ora('Template init ...')
+    spinner.start();
+
+    if (!_type || !tmpls.hasOwnProperty(_type)) {
+      spinner.fail();
+      console.error(chalk.red(`Failed to init ${_type} `) + `"${chalk.blue.bold(_type)}" not in templates`)
+      process.exit()
+    }
+
+    let url = tmpls[_type]
+
+
+    gitclone(url, _dir, (err) => {
+      if (err) {
+        process.on('exit', function() {
+          rm(_dir)
+        })
+        spinner.fail();
+        console.error(`Failed to download repo ${chalk.magenta.underline(url)} error: ${chalk.red(JSON.stringify(err))}`)
+        return;
+      }
+      spinner.succeed();
+      console.log(chalk.green('\n √ Generation completed!'))
+    })
+  }
+}

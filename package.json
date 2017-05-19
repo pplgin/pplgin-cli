@@ -1,7 +1,7 @@
 {
   "name": "pplgin-cli",
   "version": "1.0.0",
-  "description": "angular-es6脚手架",
+  "description": "脚手架",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,9 +25,10 @@
     "co": "^4.6.0",
     "co-prompt": "^1.0.0",
     "commander": "^2.9.0",
-    "download-git-repo": "^0.2.1",
+    "git-clone": "^0.1.0",
     "inquirer": "^3.0.6",
     "ora": "^1.1.0",
-    "request": "^2.81.0"
+    "request": "^2.81.0",
+    "rimraf": "^2.6.1"
   }
 }

@@ -1,4 +1,4 @@
 {
-  "angular":"https://github.com/pplgin/pplgin-templates.git",
-  "koa":"https://github.com/pplgin/pplgin-templates.git"
+  "r-mobx": "git@github.com:pplgin/react-mobx.git",
+  "s-koa": "git@github.com:pplgin/koa-template.git"
 }
