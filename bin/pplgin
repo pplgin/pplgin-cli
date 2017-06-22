@@ -12,6 +12,30 @@ const chalk = require('chalk')
 const inquirer = require('inquirer')
 const tmpls = require('../tmpls.json');
 
+const fs = require('fs');
+const exec = require('child_process').exec;
+
+
+function run(cmd, fn){
+  exec(cmd, function (error, log, warn) {
+    if (warn !== null) {
+      console.log('')
+      console.log(chalk.yellow(warn))
+      console.log('')
+    }
+    if (log !== null) {
+      console.log('')
+      console.log(log)
+      console.log('')
+    }
+    if (error !== null) {
+      console.log('' + chalk.red(error));
+      process.exit()
+    }
+    fn();
+  });
+};
+
 
 program
   .usage('<command>')
@@ -63,6 +87,12 @@ function init() {
 
   let rawName = program.args[0] //文件位置
   let _type = program.args[1] //初始化 哪种类型的项目
+
+  if (!rawName || !_type) {
+    console.error(`Dir or Tmplate must not empty`)
+    process.exit()
+  }
+
   let inPlace = !rawName || rawName === '.'
   let name = inPlace ? path.relative('../', process.cwd()) : rawName
   let toDir = path.resolve(rawName || '.')
@@ -79,6 +109,7 @@ function init() {
       name: 'ok'
     }]).then((answers) => {
       if (answers.ok) {
+        rm(toDir)
         downloadTmpl(toDir, _type);
       }
     })
