@@ -14,10 +14,12 @@ const tmpls = require('../tmpls.json');
 
 const fs = require('fs');
 const exec = require('child_process').exec;
+const {
+  spawn
+} = require('child_process')
 
-
-function run(cmd, fn){
-  exec(cmd, function (error, log, warn) {
+function run(cmd, fn) {
+  exec(cmd, function(error, log, warn) {
     if (warn !== null) {
       console.log('')
       console.log(chalk.yellow(warn))
@@ -66,7 +68,7 @@ program.on('--help', function() {
   console.log('Examples:')
   console.log()
   console.log(chalk.gray('# create a new project'))
-  console.log('$ pplgin init my-project[name]')
+  console.log('$ pplgin init my-project[name] template')
   console.log()
 })
 
@@ -84,12 +86,9 @@ if (!program.args.length) {
 
 
 function init() {
-
-  let rawName = program.args[0] //文件位置
-  let _type = program.args[1] //初始化 哪种类型的项目
-
-  if (!rawName || !_type) {
-    console.error(`Dir or Tmplate must not empty`)
+  let rawName = program.args[0]
+  if (!rawName) {
+    console.error(`ProjectName must not be empty`)
     process.exit()
   }
 
@@ -97,52 +96,79 @@ function init() {
   let name = inPlace ? path.relative('../', process.cwd()) : rawName
   let toDir = path.resolve(rawName || '.')
 
-
-  /**
-   * 如果存在文件夹
-   * @createTime           2016-08-16T23:46:35+0800
-   */
-  if (exists(toDir)) {
-    inquirer.prompt([{
-      type: 'confirm',
-      message: inPlace ? 'Generate project in current directory?' : 'Target directory exists. Continue?',
-      name: 'ok'
-    }]).then((answers) => {
-      if (answers.ok) {
-        rm(toDir)
-        downloadTmpl(toDir, _type);
-      }
-    })
-  } else {
-    downloadTmpl(toDir, _type);
-  }
-
-
-
-  function downloadTmpl(_dir, type) {
-    var spinner = ora('Template init ...')
-    spinner.start();
-
-    if (!_type || !tmpls.hasOwnProperty(_type)) {
-      spinner.fail();
-      console.error(chalk.red(`Failed to init ${_type} `) + `"${chalk.blue.bold(_type)}" not in templates`)
-      process.exit()
+  inquirer.prompt({
+    type: 'list',
+    name: 'selected',
+    message: "Select template you need?",
+    choices: Object.keys(tmpls)
+  }).then(({ selected }) => {
+    let _type = selected;
+    if (exists(toDir)) {
+      inquirer.prompt([{
+        type: 'confirm',
+        message: inPlace ? 'Generate project in current directory?' : 'Target directory exists. Continue?',
+        name: 'ok'
+      }]).then((answers) => {
+        if (answers.ok) {
+          rm(toDir)
+          downloadTmpl(toDir, _type);
+        }
+      })
+    } else {
+      downloadTmpl(toDir, _type);
     }
+  });
+}
 
-    let url = tmpls[_type]
-
-
-    gitclone(url, _dir, (err) => {
-      if (err) {
-        process.on('exit', function() {
-          rm(_dir)
-        })
-        spinner.fail();
-        console.error(`Failed to download repo ${chalk.magenta.underline(url)} error: ${chalk.red(JSON.stringify(err))}`)
-        return;
-      }
-      spinner.succeed();
-      console.log(chalk.green('\n √ Generation completed!'))
-    })
+/**
+ * [downloadTmpl download from git]
+ * @author  johnnyjiang
+ * @email               johnnyjiang813@gmail.com
+ */
+function downloadTmpl(_dir, _type) {
+  let spinner = ora('Template check ...')
+  spinner.start();
+  if (!_type || !tmpls.hasOwnProperty(_type)) {
+    spinner.fail();
+    console.error(chalk.red(`failed to check ${_type} `) + `"${chalk.blue.bold(_type)}" not in templates`)
+    process.exit()
   }
+  spinner.succeed('Template check success!')
+
+  let spinnerLoad = ora('Template Dowloading ...')
+  spinnerLoad.start()
+
+  let url = tmpls[_type]
+
+
+  gitclone(url, _dir, (err) => {
+    if (err) {
+      process.on('exit', function() {
+        rm(_dir)
+      })
+      spinner.fail();
+      console.error(`failed to download repo ${chalk.magenta.underline(url)} error: ${chalk.red(JSON.stringify(err))}`)
+      return;
+    }
+    spinnerLoad.succeed('Template Dowloading success!');
+    installDep(_dir)
+  })
+}
+
+
+function installDep(_dir) {
+  const sp = spawn('yarn', [], {
+    stdio: 'pipe',
+    cwd: _dir
+  })
+  sp.stdout.pipe(process.stdout)
+  sp.stderr.pipe(process.stderr)
+  sp.on('error', err => {
+    console.error(`fail to install dependencies ${chalk.red(JSON.stringify(err))}`)
+  })
+  sp.on('close', code => {
+    if (code === 0) {
+     console.log(chalk.green('\n √ Generation completed!'))
+    }
+  })
 }

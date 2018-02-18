@@ -1,4 +1,4 @@
 {
-  "generate-rmobx": "git@github.com:pplgin/react-mobx.git",
-  "generate-skoa": "git@github.com:pplgin/koa-template.git"
+  "gen-react-mobx": "git@github.com:pplgin/react16-mobx.git",
+  "gen-node-koa": "git@github.com:pplgin/koa-template.git"
 }
